@@ -20,6 +20,8 @@ This tool runs on a cron schedule (or automatically on start, if configured) (de
 
 After querying enough songs (plus backups) to fulfill the playlist criteria (Discover Recommended and Mix default to 25, Library is 50), the tool begins querying the YouTube Music API to find and download the tracks [(Cookies are highly recommended)](https://github.com/yt-dlp/yt-dlp/wiki/Extractors#exporting-youtube-cookies). Already existing tracks in Navidrome are skipped. Once the download is complete, the tool searches Navidrome for the tracks searched, and adds them to the corresponding playlist. The playlist is not deleted as to retain the same ID.
 
+Note: The Library playlist will never download any tracks, instead it simply queries the songs and searches Navidrome for them to add to the playlist.
+
 When the cron schedule re-runs, it deletes all of the discover tracks (but not your local tracks) and begins the process again.
 
 # Installation
