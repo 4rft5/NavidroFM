@@ -1,6 +1,6 @@
 services:
   navidrofm:
-    image: ghcr.io/4rft5/navidrofm
+    image: ghcr.io/4rft5/navidrofm:latest
     container_name: navidrofm
     restart: unless-stopped
     environment:
