@@ -9,7 +9,7 @@ As described above, the tool makes three playlists:
 
 Discover Recommended is more about pure recommendations from LastFM about songs you may like.
 
-Discover Mix is a mix of tracks to discover and tracks you already enjoy.
+Recommended Mix is a mix of tracks to discover and tracks you already enjoy.
 
 Library Mix is made up of songs from your existing library.
 
@@ -19,7 +19,7 @@ Currently, the tool uses the following LastFM json endpoints (courtesy of u/stde
 
 Discover Recommended: https://www.last.fm/player/station/user/username/recommended
 
-Discover Mix: https://www.last.fm/player/station/user/username/mix
+Recommended Mix: https://www.last.fm/player/station/user/username/mix
 
 Library Mix: https://www.last.fm/player/station/user/username/library
 </details>
