@@ -2,7 +2,7 @@
 Generate Automatic Spotify-like playlists for your Navidrome instance.
 
 # About
-This tool uses exposed LastFM json endpoints to get information about your scrobble history, downloads those songs via [yt-dlp](https://github.com/yt-dlp/yt-dlp) and [ytmusicapi](https://github.com/sigma67/ytmusicapi), then imports them into Navidrome for you to listen to.
+This tool uses exposed LastFM json endpoints to get information about your scrobble history, downloads those songs via [yt-dlp](https://github.com/yt-dlp/yt-dlp) and [ytmusicapi](https://github.com/sigma67/ytmusicapi), then imports them as Navidrome playlists for you to listen to.
 
 ## Playlists
 As described above, the tool makes three playlists. Discover Recommended is more about pure recommendations from LastFM about songs you may like, Discover Mix is a mix of tracks to discover and tracks you already enjoy, and Library Mix is made up of songs from your existing library.
