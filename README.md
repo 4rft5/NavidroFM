@@ -1,5 +1,5 @@
 # NavidroFM
-Generate Automatic Spotify-like playlists for your Navidrome instance.
+Generate automatic Spotify-like playlists for your Navidrome instance.
 
 # About
 This tool uses exposed LastFM json endpoints to get information about your scrobble history, downloads those songs via [yt-dlp](https://github.com/yt-dlp/yt-dlp) and [ytmusicapi](https://github.com/sigma67/ytmusicapi), then imports them as Navidrome playlists for you to listen to.
