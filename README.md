@@ -25,9 +25,9 @@ Library Mix: https://www.last.fm/player/station/user/username/library
 </details>
 
 # How it Works
-This tool runs on a cron schedule (or automatically on start, if configured) (defaults to 4:00am on Mondays) using `TZ` that gets songs from the json endpoints based on the username you provide in `docker-compose`. This means that you do not need to authenticate for LastFM, and can even download playlists using others' usernames, if you so please.
+This tool runs on a cron schedule using `TZ` that gets songs from the json endpoints based on the username you provide in `docker-compose`. This means that you do not need to authenticate for LastFM, and can even download playlists using others' usernames, if you so please.
 
-After querying enough songs (plus backups) to fulfill the playlist criteria (Discover Recommended and Mix default to 25, Library is 50), the tool begins querying the YouTube Music API to find and download the tracks [(Cookies are highly recommended)](https://github.com/yt-dlp/yt-dlp/wiki/Extractors#exporting-youtube-cookies). Already existing tracks in Navidrome are skipped. Once the download is complete, the tool searches Navidrome for the tracks and adds them to the corresponding playlist. The playlist is not deleted as to retain the same ID.
+After querying enough songs (plus backups in case a download or search fails) to fulfill the playlist criteria, the tool begins querying the YouTube Music API to find and download the tracks. Already existing tracks in Navidrome are skipped. Once the download is complete, the tool searches Navidrome for the tracks and adds them to the corresponding playlist. The playlist is cleared, not deleted as to retain the same ID.
 
 Note: The Library playlist will never download any tracks, instead it simply queries the songs and searches Navidrome for them to add to the playlist.
 
@@ -36,6 +36,8 @@ When the cron schedule re-runs, it deletes all of the discover tracks (but not y
 # Installation
 1. Download `docker-compose.yml` from this repo
 2. Configure your environment variables:
+
+   Cron defaults to 4:00am on Mondays.
   ```
       TZ: Your/Timezone
       LASTFM_USERNAME: musername
