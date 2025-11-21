@@ -26,7 +26,7 @@ When the cron schedule re-runs, it deletes all of the discover tracks (but not y
 1. Download `docker-compose.yml` from this repo
 2. Configure your environment variables:
   ```
-      TZ: America/Denver
+      TZ: Your/Timezone
       LASTFM_USERNAME: musername
       NAVIDROME_URL: http://navidrome:4533
       NAVIDROME_USERNAME: username
