@@ -24,7 +24,7 @@ Recommended Mix: https://www.last.fm/player/station/user/username/mix
 Library Mix: https://www.last.fm/player/station/user/username/library
 </details>
 
-# How it Works
+## How it Works
 This tool runs on a cron schedule using `TZ` that gets songs from the json endpoints based on the username you provide in `docker-compose`. This means that you do not need to authenticate for LastFM, and can even download playlists based on others' scrobbles, if you so please.
 
 After querying enough songs (plus backups in case a download or search fails) to fulfill the playlist criteria, the tool begins querying the YouTube Music API to find and download the tracks. Already existing tracks in Navidrome are skipped. Once the download is complete, the tool searches Navidrome for the tracks and adds them to the corresponding playlist. The playlist is cleared, not deleted as to retain the same ID.
