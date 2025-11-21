@@ -35,6 +35,7 @@ When the cron schedule re-runs, it deletes all of the discover tracks (but not y
   ```
 3. Configure playlist variables
    Playlists all default to enabled (true) but can be disabled with false.
+   
    The track length for both Recommended playlists defaults to 25, library is 50)
    ```
       RECOMMENDED: "true"
@@ -44,17 +45,20 @@ When the cron schedule re-runs, it deletes all of the discover tracks (but not y
       LIBRARY: "true"
       LIBRARY_TRACKS: "50"
    ```
-4. Set Volumes in compose
+5. Set Volumes in compose
    The path for `/your/music/library` can be set to the same path as Navidrome uses. The tool makes its own folder `navidrofm` in which it places its downloaded songs.
+   
    The path for `cookies.txt` is optional but [(Cookies are highly recommended)](https://github.com/yt-dlp/yt-dlp/wiki/Extractors#exporting-youtube-cookies).
    ```
        volumes:
       - /your/music/library:/music
       - ./cookies.txt:/app/cookies/cookies.txt
    ```
-5. Deploy and test
+7. Deploy and test
    Run `docker compose up -d`.
+   
    If you want the sync to run on start, you can set `RUN_ON_STARTUP: "true"`. Otherwise, the sync will run once it gets the first run from cron.
+   
    The tool will run and download tracks as outlined above.
 
 ## Contributions
