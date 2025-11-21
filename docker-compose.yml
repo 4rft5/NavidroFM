@@ -4,10 +4,12 @@ services:
     container_name: navidrofm
     restart: unless-stopped
     environment:
+      TZ: America/Denver
       LASTFM_USERNAME: musername
       NAVIDROME_URL: http://navidrome:4533
       NAVIDROME_USERNAME: username
       NAVIDROME_PASSWORD: password
+      SYNC_SCHEDULE: "0 4 * * 1"
       RECOMMENDED: "true"
       RECOMMENDED_TRACKS: "25"
       MIX: "true"
@@ -15,8 +17,6 @@ services:
       LIBRARY: "true"
       LIBRARY_TRACKS: "50"
       RUN_ON_STARTUP: "false"
-      SYNC_SCHEDULE: "0 4 * * 1"
-      TZ: America/Denver
       PUID: 1000
       PGID: 1000
     volumes:
