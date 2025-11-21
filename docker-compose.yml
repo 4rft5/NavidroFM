@@ -1,0 +1,24 @@
+services:
+  navidrofm:
+    image: ghcr.io/4rft5/navidrofm
+    container_name: navidrofm
+    restart: unless-stopped
+    environment:
+      LASTFM_USERNAME: musername
+      NAVIDROME_URL: http://navidrome:4533
+      NAVIDROME_USERNAME: username
+      NAVIDROME_PASSWORD: password
+      RECOMMENDED: "true"
+      RECOMMENDED_TRACKS: "25"
+      MIX: "true"
+      MIX_TRACKS: "25"
+      LIBRARY: "true"
+      LIBRARY_TRACKS: "50"
+      RUN_ON_STARTUP: "false"
+      SYNC_SCHEDULE: "0 4 * * 1"
+      TZ: America/Denver
+      PUID: 1000
+      PGID: 1000
+    volumes:
+      - /your/music/library:/music
+      - ./cookies.txt:/app/cookies/cookies.txt
