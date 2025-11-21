@@ -40,7 +40,7 @@ When the cron schedule re-runs, it deletes all of the discover tracks (but not y
    Cron defaults to 4:00am on Mondays.
   ```
       TZ: Your/Timezone
-      LASTFM_USERNAME: musername
+      LASTFM_USERNAME: username
       NAVIDROME_URL: http://navidrome:4533
       NAVIDROME_USERNAME: username
       NAVIDROME_PASSWORD: password
