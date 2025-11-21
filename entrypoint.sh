@@ -36,14 +36,14 @@ if [ "${RECOMMENDED}" = "true" ] || [ "${MIX}" = "true" ] || [ "${LIBRARY}" = "t
         SCHEDULE="${SYNC_SCHEDULE}"
     else
 
-        SCHEDULE="0 20 * * *" 
+        SCHEDULE="0 4 * * 1" 
         
         if [ "${RECOMMENDED}" = "true" ]; then
-            SCHEDULE="${RECOMMENDED_SCHEDULE:-0 20 * * *}"
+            SCHEDULE="${RECOMMENDED_SCHEDULE:-0 4 * * 1}"
         elif [ "${MIX}" = "true" ]; then
-            SCHEDULE="${MIX_SCHEDULE:-0 20 * * *}"
+            SCHEDULE="${MIX_SCHEDULE:-0 4 * * 1}"
         elif [ "${LIBRARY}" = "true" ]; then
-            SCHEDULE="${LIBRARY_SCHEDULE:-0 20 * * *}"
+            SCHEDULE="${LIBRARY_SCHEDULE:-0 4 * * 1}"
         fi
     fi
     
