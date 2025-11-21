@@ -7,6 +7,8 @@ This tool uses exposed LastFM json endpoints to get information about your scrob
 ## Playlists
 As described above, the tool makes three playlists. Discover Recommended is more about pure recommendations from LastFM about songs you may like, Discover Mix is a mix of tracks to discover and tracks you already enjoy, and Library Mix is made up of songs from your existing library.
 
+<details>
+<summary>Endpoint Info</summary>
 Currently, the tool uses the following LastFM json endpoints [(Courtesy of u/stdeem)](https://www.reddit.com/r/lastfm/comments/d2svfs/comment/fft8xef/?context=3):
 
 Discover Recommended: https://www.last.fm/player/station/user/username/recommended
@@ -14,11 +16,12 @@ Discover Recommended: https://www.last.fm/player/station/user/username/recommend
 Discover Mix: https://www.last.fm/player/station/user/username/mix
 
 Library Mix: https://www.last.fm/player/station/user/username/library
+</details>
 
 # How it Works
 This tool runs on a cron schedule (or automatically on start, if configured) (defaults to 4:00am on Mondays) using `TZ` that gets songs from the json endpoints based on the username you provide in `docker-compose`. This means that you do not need to authenticate for LastFM, and can even download playlists using others' usernames, if you so please.
 
-After querying enough songs (plus backups) to fulfill the playlist criteria (Discover Recommended and Mix default to 25, Library is 50), the tool begins querying the YouTube Music API to find and download the tracks [(Cookies are highly recommended)](https://github.com/yt-dlp/yt-dlp/wiki/Extractors#exporting-youtube-cookies). Already existing tracks in Navidrome are skipped. Once the download is complete, the tool searches Navidrome for the tracks searched, and adds them to the corresponding playlist. The playlist is not deleted as to retain the same ID.
+After querying enough songs (plus backups) to fulfill the playlist criteria (Discover Recommended and Mix default to 25, Library is 50), the tool begins querying the YouTube Music API to find and download the tracks [(Cookies are highly recommended)](https://github.com/yt-dlp/yt-dlp/wiki/Extractors#exporting-youtube-cookies). Already existing tracks in Navidrome are skipped. Once the download is complete, the tool searches Navidrome for the tracks and adds them to the corresponding playlist. The playlist is not deleted as to retain the same ID.
 
 Note: The Library playlist will never download any tracks, instead it simply queries the songs and searches Navidrome for them to add to the playlist.
 
