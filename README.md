@@ -37,9 +37,9 @@ When the cron schedule re-runs, it deletes all of the discover tracks (but not y
   ```
 3. Configure playlist variables
    
-   Playlists all default to enabled (true) but can be disabled with false.
+   Playlists all default to enabled with `true` but can be disabled with `false`.
    
-   The track length for both Recommended playlists defaults to 25, library is 50)
+   The default track count for both Recommended playlists defaults to 25, Library is 50.
    ```
       RECOMMENDED: "true"
       RECOMMENDED_TRACKS: "25"
@@ -52,7 +52,7 @@ When the cron schedule re-runs, it deletes all of the discover tracks (but not y
    
    The path for `/your/music/library` can be set to the same path as Navidrome uses. The tool makes its own folder `navidrofm` in which it places its downloaded songs.
    
-   The path for `cookies.txt` is optional but [(Cookies are highly recommended)](https://github.com/yt-dlp/yt-dlp/wiki/Extractors#exporting-youtube-cookies).
+   The volume for `cookies.txt` is optional but [(Cookies are highly recommended)](https://github.com/yt-dlp/yt-dlp/wiki/Extractors#exporting-youtube-cookies).
    ```
        volumes:
       - /your/music/library:/music
