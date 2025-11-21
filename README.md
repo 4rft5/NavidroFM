@@ -9,11 +9,11 @@ As described above, the tool makes three playlists. Discover Recommended is more
 
 Currently, the tool uses the following LastFM json endpoints [(Courtesy of u/stdeem)](https://www.reddit.com/r/lastfm/comments/d2svfs/comment/fft8xef/?context=3):
 
-Discover Recommended: https://www.last.fm/player/station/user/%7Busername%7D/recommended
+Discover Recommended: https://www.last.fm/player/station/user/username/recommended
 
-Discover Mix: https://www.last.fm/player/station/user/%7Busername%7D/mix
+Discover Mix: https://www.last.fm/player/station/user/username/mix
 
-Library Mix: https://www.last.fm/player/station/user/%7Busername%7D/library
+Library Mix: https://www.last.fm/player/station/user/username/library
 
 # How it Works
 This tool runs on a cron schedule (or automatically on start, if configured) (defaults to 4:00am on Mondays) using `TZ` that gets songs from the json endpoints based on the username you provide in `docker-compose`. This means that you do not need to authenticate for LastFM, and can even download playlists using others' usernames, if you so please.
