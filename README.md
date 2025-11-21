@@ -15,7 +15,7 @@ Library Mix is made up of songs from your existing library.
 
 <details>
 <summary>Endpoint Info</summary>
-Currently, the tool uses the following LastFM json endpoints [(Courtesy of u/stdeem)](https://www.reddit.com/r/lastfm/comments/d2svfs/comment/fft8xef/?context=3):
+Currently, the tool uses the following LastFM json endpoints (courtesy of u/stdeem):
 
 Discover Recommended: https://www.last.fm/player/station/user/username/recommended
 
