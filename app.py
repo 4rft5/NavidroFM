@@ -540,13 +540,17 @@ class LastFMNavidromeSync:
         song_ids = []
         
         try:
+            if downloaded_tracks:
+                time.sleep(5)
+            
             log("Triggering Navidrome library scan...")
             self._make_request('startScan')
             
             log("Waiting for scan to complete...")
-            max_wait = 90
-            for i in range(max_wait):
+            scan_time = 0
+            while True:
                 time.sleep(1)
+                scan_time += 1
                 try:
                     status = self._make_request('getScanStatus')
                     scan_status = status.get('subsonic-response', {}).get('scanStatus', {})
@@ -554,16 +558,22 @@ class LastFMNavidromeSync:
                     count = scan_status.get('count', 0)
                     
                     if not scanning:
-                        log(f"Scan completed after {i+1}s")
+                        log(f"Scan completed after {scan_time}s")
                         break
-                    if i % 10 == 0 and i > 0:
-                        log(f"  Still scanning... ({i+1}s, {count} items so far)")
-                except:
+                    if scan_time % 10 == 0:
+                        log(f"  Still scanning... ({scan_time}s, {count} items so far)")
+                except Exception as e:
+                    if scan_time % 30 == 0:
+                        log(f"  Warning: Could not check scan status: {e}")
                     pass
             
-            time.sleep(10)
+            log("Waiting for indexing to complete")
+            for i in range(30):
+                time.sleep(1)
             
             log(f"\nSearching for {len(downloaded_tracks)} downloaded tracks in Navidrome...")
+            
+            not_found_tracks = []
             
             for i, track_info in enumerate(downloaded_tracks, 1):
                 artist = track_info.get('artist', '')
@@ -591,11 +601,48 @@ class LastFMNavidromeSync:
                             song_ids.append(song_id)
                         else:
                             log(f"  No valid song ID")
+                            not_found_tracks.append(track_info)
                     else:
                         log(f"  Not found in search results")
+                        not_found_tracks.append(track_info)
                         
                 except Exception as e:
                     log(f"  Search error: {e}")
+                    not_found_tracks.append(track_info)
+            
+
+            if not_found_tracks:
+                log(f"\n{len(not_found_tracks)} tracks not found, waiting 20s and retrying...")
+                time.sleep(20)
+                
+                for track_info in not_found_tracks:
+                    artist = track_info.get('artist', '')
+                    title = track_info.get('title', '')
+                    
+                    if not artist or not title:
+                        continue
+                    
+                    try:
+                        query = f"{artist} {title}"
+                        response = self._make_request('search3', {
+                            'query': query,
+                            'artistCount': 0,
+                            'albumCount': 0,
+                            'songCount': 10
+                        })
+                        
+                        songs = response.get('subsonic-response', {}).get('searchResult3', {}).get('song', [])
+                        if isinstance(songs, dict):
+                            songs = [songs]
+                        
+                        if songs:
+                            song_id = songs[0].get('id')
+                            if song_id:
+                                song_ids.append(song_id)
+                                log(f"  Found on retry: {artist} - {title}")
+                            
+                    except Exception as e:
+                        log(f"  Retry search error: {e}")
             
             log(f"\nFound {len(song_ids)}/{len(downloaded_tracks)} tracks in Navidrome")
             return song_ids
@@ -605,7 +652,7 @@ class LastFMNavidromeSync:
             log(f"Error scanning and searching tracks: {e}")
             traceback.print_exc()
             return []
-    
+
     def update_playlist(self, playlist_id: str, song_ids: List[str]):
         """Update playlist with songs"""
         try:
