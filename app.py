@@ -540,17 +540,20 @@ class LastFMNavidromeSync:
         song_ids = []
         
         try:
-            if downloaded_tracks:
-                time.sleep(5)
+            if not downloaded_tracks:
+                log("No new tracks downloaded, skipping scan")
+                return song_ids
             
-            log("Triggering Navidrome library scan...")
-            self._make_request('startScan')
+            log(f"Triggering Navidrome library scan for {len(downloaded_tracks)} new tracks...")
+            self._make_request('startScan', {'fullScan': 'false'})
             
             log("Waiting for scan to complete...")
             scan_time = 0
+            
             while True:
-                time.sleep(1)
-                scan_time += 1
+                time.sleep(2)
+                scan_time += 2
+                
                 try:
                     status = self._make_request('getScanStatus')
                     scan_status = status.get('subsonic-response', {}).get('scanStatus', {})
@@ -558,18 +561,20 @@ class LastFMNavidromeSync:
                     count = scan_status.get('count', 0)
                     
                     if not scanning:
-                        log(f"Scan completed after {scan_time}s")
+                        log(f"Scan completed after {scan_time}s ({count} items processed)")
                         break
-                    if scan_time % 10 == 0:
+                        
+                    if scan_time % 20 == 0:
                         log(f"  Still scanning... ({scan_time}s, {count} items so far)")
+                        
                 except Exception as e:
                     if scan_time % 30 == 0:
                         log(f"  Warning: Could not check scan status: {e}")
                     pass
             
-            log("Waiting for indexing to complete")
-            for i in range(30):
-                time.sleep(1)
+            wait_time = min(max(len(downloaded_tracks), 5), 30)
+            log(f"Waiting {wait_time}s for indexing to complete...")
+            time.sleep(wait_time)
             
             log(f"\nSearching for {len(downloaded_tracks)} downloaded tracks in Navidrome...")
             
@@ -600,20 +605,21 @@ class LastFMNavidromeSync:
                         if song_id:
                             song_ids.append(song_id)
                         else:
-                            log(f"  No valid song ID")
+                            log(f"  [{i}/{len(downloaded_tracks)}] No valid song ID for: {artist} - {title}")
                             not_found_tracks.append(track_info)
                     else:
-                        log(f"  Not found in search results")
+                        log(f"  [{i}/{len(downloaded_tracks)}] Not found: {artist} - {title}")
                         not_found_tracks.append(track_info)
                         
                 except Exception as e:
-                    log(f"  Search error: {e}")
+                    log(f"  [{i}/{len(downloaded_tracks)}] Search error for {artist} - {title}: {e}")
                     not_found_tracks.append(track_info)
             
-
+            # Retry logic for missing tracks
             if not_found_tracks:
-                log(f"\n{len(not_found_tracks)} tracks not found, waiting 20s and retrying...")
-                time.sleep(20)
+                retry_wait = min(len(not_found_tracks) * 2, 30)
+                log(f"\n{len(not_found_tracks)} tracks not found, waiting {retry_wait}s and retrying...")
+                time.sleep(retry_wait)
                 
                 for track_info in not_found_tracks:
                     artist = track_info.get('artist', '')
@@ -642,7 +648,7 @@ class LastFMNavidromeSync:
                                 log(f"  Found on retry: {artist} - {title}")
                             
                     except Exception as e:
-                        log(f"  Retry search error: {e}")
+                        log(f"  Retry search error for {artist} - {title}: {e}")
             
             log(f"\nFound {len(song_ids)}/{len(downloaded_tracks)} tracks in Navidrome")
             return song_ids
