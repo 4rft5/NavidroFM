@@ -2,7 +2,7 @@
 Generate automatic Spotify-like playlists for your Navidrome instance.
 
 # About
-This tool uses public scrobble history to get information about your music taste, downloads those songs via [yt-dlp](https://github.com/yt-dlp/yt-dlp) and [ytmusicapi](https://github.com/sigma67/ytmusicapi), then imports them as Navidrome playlists for you to listen to.
+This tool uses public scrobble history to get information about your music taste and recommendations, downloads those songs via [yt-dlp](https://github.com/yt-dlp/yt-dlp) and [ytmusicapi](https://github.com/sigma67/ytmusicapi), then imports them as Navidrome playlists for you to listen to.
 
 ## Playlists
 
