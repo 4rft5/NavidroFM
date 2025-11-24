@@ -6,16 +6,21 @@ services:
     environment:
       TZ: Your/Timezone
       LASTFM_USERNAME: username
+      LZ_USERNAME: username
       NAVIDROME_URL: http://navidrome:4533
       NAVIDROME_USERNAME: username
       NAVIDROME_PASSWORD: password
-      SYNC_SCHEDULE: "0 4 * * 1"
+      SYNC_SCHEDULE: "00 4 * * 1"
       RECOMMENDED: "true"
-      RECOMMENDED_TRACKS: "25"
+      RECOMMENDED_TRACKS: "10"
       MIX: "true"
-      MIX_TRACKS: "25"
+      MIX_TRACKS: "10"
       LIBRARY: "true"
       LIBRARY_TRACKS: "50"
+      EXPLORATION: "true"
+      EXPLORATION_TRACKS: "25"
+      JAMS: "true"
+      JAMS_TRACKS: "25"
       RUN_ON_STARTUP: "false"
       PUID: 1000
       PGID: 1000
