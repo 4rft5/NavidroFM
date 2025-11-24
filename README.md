@@ -11,8 +11,8 @@ This tool uses public scrobble history to get information about your music taste
 | LastFM       | Discover Recommended | Recommendations of songs you may like.         |
 | LastFM       | Recommended Mix      | Mix of tracks to discover and tracks you know. |
 | LastFM       | Library Mix          | Mix of songs from your existing library.       |
-| ListenBrainz | Weekly Exploration   | Discover new tracks based on your history      |
-| ListenBrainz | Weekly Jams          | Mix of songs from your existing library.       |
+| ListenBrainz | Weekly Exploration   | Discover new tracks based on your history.     |
+| ListenBrainz | Weekly Jams          | Mix of songs, both new and from your library.  |
 
 Disclaimer: ListenBrainz is not currently implemented, but is planned for release 1.1.0.
 
