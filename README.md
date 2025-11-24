@@ -52,29 +52,29 @@ When the cron schedule re-runs, it deletes all of the downloaded tracks (and nev
    
    Playlists all default to false but can be enabled with `"true"` (See below).
    
-   3.1 LastFM
+      3.1 LastFM
    
-   The default track count for both Recommended playlists defaults to 25, Library is 50.
-   ```
-      LASTFM_USERNAME: username
-      RECOMMENDED: "true"
-      RECOMMENDED_TRACKS: "25"
-      MIX: "true"
-      MIX_TRACKS: "25"
-      LIBRARY: "true"
-      LIBRARY_TRACKS: "50"
-   ```
+      The default track count for both Recommended playlists defaults to 25, Library is 50.
+      ```
+         LASTFM_USERNAME: username
+         RECOMMENDED: "true"
+         RECOMMENDED_TRACKS: "25"
+         MIX: "true"
+         MIX_TRACKS: "25"
+         LIBRARY: "true"
+         LIBRARY_TRACKS: "50"
+      ```
    
-   3.2 ListenBrainz (Currently not implemented, planned for 1.1.0)
+      3.2 ListenBrainz (Currently not implemented, planned for 1.1.0)
 
-   The default track count for both playlists defaults to 25 with a max of 50.
-   ```
-      LZ_USERNAME: username
-      EXPLORATION: "true"
-      EXPLORATION_TRACKS: "25"
-      JAMS: "true"
-      JAMS_TRACKS: "25"
-   ```
+      The default track count for both playlists defaults to 25 with a max of 50.
+      ```
+         LZ_USERNAME: username
+         EXPLORATION: "true"
+         EXPLORATION_TRACKS: "25"
+         JAMS: "true"
+         JAMS_TRACKS: "25"
+      ```
    
 5. Set Volumes in compose
    
