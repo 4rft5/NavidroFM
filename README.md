@@ -2,19 +2,20 @@
 Generate automatic Spotify-like playlists for your Navidrome instance.
 
 # About
-This tool uses exposed LastFM json endpoints to get information about your scrobble history, downloads those songs via [yt-dlp](https://github.com/yt-dlp/yt-dlp) and [ytmusicapi](https://github.com/sigma67/ytmusicapi), then imports them as Navidrome playlists for you to listen to.
+This tool uses public scrobble history to get information about your music taste, downloads those songs via [yt-dlp](https://github.com/yt-dlp/yt-dlp) and [ytmusicapi](https://github.com/sigma67/ytmusicapi), then imports them as Navidrome playlists for you to listen to.
 
 ## Playlists
-As described above, the tool makes three playlists:
 
-Discover Recommended is more about pure recommendations from LastFM about songs you may like.
-
-Recommended Mix is a mix of tracks to discover and tracks you already enjoy.
-
-Library Mix is made up of songs from your existing library.
+| Provider     | Playlist             | Function                                       |
+| ------------ | -------------------- | ---------------------------------------------- |
+| LastFM       | Discover Recommended | Recommendations of songs you may like.         |
+| LastFM       | Recommended Mix      | Mix of tracks to discover and tracks you know. |
+| LastFM       | Library Mix          | Mix of songs from your existing library.       |
+| ListenBrainz | Weekly Exploration   | Discover new tracks (not yet implemented)      |
+| ListenBrainz | Weekly Jams          | Songs listened to before (not yet implemented) |
 
 <details>
-<summary>Endpoint Info</summary>
+<summary>LastFM Endpoint Info</summary>
 Currently, the tool uses the following LastFM json endpoints (courtesy of u/stdeem):
 
 Discover Recommended: https://www.last.fm/player/station/user/username/recommended
@@ -25,11 +26,11 @@ Library Mix: https://www.last.fm/player/station/user/username/library
 </details>
 
 ## How it Works
-This tool runs on a cron schedule using `TZ` that gets songs from the json endpoints based on the username you provide in `docker-compose`. This means that you do not need to authenticate for LastFM, and can even download playlists based on others' scrobbles, if you so please.
+This tool runs on a cron schedule using `TZ` that gets songs from the endpoints based on the usernames you provide in `docker-compose`. This means that you do not need to authenticate, and can even download playlists based on others scrobbles, if you so please.
 
 After querying enough songs (plus backups in case a download or search fails) to fulfill the playlist criteria, the tool begins querying the YouTube Music API to find and download the tracks. Already existing tracks in Navidrome are skipped. Once the download is complete, the tool searches Navidrome for the tracks and adds them to the corresponding playlist. The playlist is cleared, not deleted as to retain the same ID.
 
-Note: The Library playlist will never download any tracks, instead it simply queries the songs and searches Navidrome for them to add to the playlist.
+Note: The Library/Weekly Jams playlists will never download any tracks, instead it simply queries the songs and searches Navidrome for them to add to the playlist.
 
 When the cron schedule re-runs, it deletes all of the discover tracks (but not your local tracks) and begins the process again.
 
@@ -79,6 +80,8 @@ When the cron schedule re-runs, it deletes all of the discover tracks (but not y
 
 ## Contributions
 If you want to add something or clean up code, feel free to open a PR on this repo.
+
+I'm planning to add support for ListenBrainz auto-generated playlists, I just started using it however, so I don't have access to both their auto-generated playlists.
 
 ## Issues
 I have not encountered any issues during my testing, but if you encounter an issue, you can open an issue here. Please provide logs from everything to help me better help you.
