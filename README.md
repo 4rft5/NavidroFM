@@ -32,7 +32,7 @@ This tool runs on a cron schedule using `TZ` that gets songs from the endpoints 
 
 After querying enough songs (plus backups in case a download or search fails) to fulfill the playlist criteria, the tool begins querying the YouTube Music API to find and download the tracks. Already existing tracks in Navidrome are skipped. Once the download is complete, the tool searches Navidrome for the tracks and adds them to the corresponding playlist. The playlist is cleared, not deleted as to retain the same ID.
 
-Note: The Library/Weekly Jams playlists will never download any tracks, instead it simply queries the songs and searches Navidrome for them to add to the playlist.
+Note: The LastFM Library playlist will never download any tracks, instead it simply queries the songs and searches Navidrome for them to add to the playlist.
 
 When the cron schedule re-runs, it deletes all of the downloaded tracks (and never your local tracks) and begins the process again.
 
