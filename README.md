@@ -50,11 +50,11 @@ When the cron schedule re-runs, it deletes all of the downloaded tracks (and nev
   ```
 3. Configure playlist variables
    
-   Playlists all default to enabled with `true` but can be disabled with `false`.
-   
-   The default track count for both Recommended playlists defaults to 25, Library is 50.
+   Playlists all default to false but can be enabled with `"true"` (See below).
    
    3.1 LastFM
+   
+   The default track count for both Recommended playlists defaults to 25, Library is 50.
    ```
       LASTFM_USERNAME: username
       RECOMMENDED: "true"
@@ -66,6 +66,8 @@ When the cron schedule re-runs, it deletes all of the downloaded tracks (and nev
    ```
    
    3.2 ListenBrainz (Currently not implemented, planned for 1.1.0)
+
+   The default track count for both playlists defaults to 25 with a max of 50.
    ```
       LZ_USERNAME: username
       EXPLORATION: "true"
