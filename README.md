@@ -32,7 +32,7 @@ After querying enough songs (plus backups in case a download or search fails) to
 
 Note: The Library/Weekly Jams playlists will never download any tracks, instead it simply queries the songs and searches Navidrome for them to add to the playlist.
 
-When the cron schedule re-runs, it deletes all of the discover tracks (but not your local tracks) and begins the process again.
+When the cron schedule re-runs, it deletes all of the downloaded tracks (and never your local tracks) and begins the process again.
 
 # Installation
 1. Download `docker-compose.yml` from this repo
