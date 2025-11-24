@@ -11,8 +11,10 @@ This tool uses public scrobble history to get information about your music taste
 | LastFM       | Discover Recommended | Recommendations of songs you may like.         |
 | LastFM       | Recommended Mix      | Mix of tracks to discover and tracks you know. |
 | LastFM       | Library Mix          | Mix of songs from your existing library.       |
-| ListenBrainz | Weekly Exploration   | Discover new tracks (not yet implemented)      |
-| ListenBrainz | Weekly Jams          | Songs listened to before (not yet implemented) |
+| ListenBrainz | Weekly Exploration   | Discover new tracks based on your history      |
+| ListenBrainz | Weekly Jams          | Mix of songs from your existing library.       |
+
+Disclaimer: ListenBrainz is not currently implemented, but is planned for release 1.1.0.
 
 <details>
 <summary>LastFM Endpoint Info</summary>
@@ -41,7 +43,6 @@ When the cron schedule re-runs, it deletes all of the downloaded tracks (and nev
    Cron defaults to 4:00am on Mondays.
   ```
       TZ: Your/Timezone
-      LASTFM_USERNAME: username
       NAVIDROME_URL: http://navidrome:4533
       NAVIDROME_USERNAME: username
       NAVIDROME_PASSWORD: password
@@ -52,7 +53,10 @@ When the cron schedule re-runs, it deletes all of the downloaded tracks (and nev
    Playlists all default to enabled with `true` but can be disabled with `false`.
    
    The default track count for both Recommended playlists defaults to 25, Library is 50.
+   
+   3.1 LastFM
    ```
+      LASTFM_USERNAME: username
       RECOMMENDED: "true"
       RECOMMENDED_TRACKS: "25"
       MIX: "true"
@@ -60,6 +64,16 @@ When the cron schedule re-runs, it deletes all of the downloaded tracks (and nev
       LIBRARY: "true"
       LIBRARY_TRACKS: "50"
    ```
+   
+   3.2 ListenBrainz (Currently not implemented, planned for 1.1.0)
+   ```
+      LZ_USERNAME: username
+      EXPLORATION: "true"
+      EXPLORATION_TRACKS: "25"
+      JAMS: "true"
+      JAMS_TRACKS: "25"
+   ```
+   
 5. Set Volumes in compose
    
    The path for `/your/music/library` can be set to the same path as Navidrome uses. The tool makes its own folder `navidrofm` in which it places its downloaded songs.
@@ -80,8 +94,6 @@ When the cron schedule re-runs, it deletes all of the downloaded tracks (and nev
 
 ## Contributions
 If you want to add something or clean up code, feel free to open a PR on this repo.
-
-I'm planning to add support for ListenBrainz auto-generated playlists, I just started using it however, so I don't have access to both their auto-generated playlists.
 
 ## Issues
 If you encounter an issue, you can open an issue here. Please provide logs from everything to help me better help you.
