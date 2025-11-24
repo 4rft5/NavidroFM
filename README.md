@@ -14,8 +14,6 @@ This tool uses public scrobble history to get information about your music taste
 | ListenBrainz | Weekly Exploration   | Discover new tracks based on your history.     |
 | ListenBrainz | Weekly Jams          | Mix of songs, both new and from your library.  |
 
-Disclaimer: ListenBrainz is not currently implemented, but is planned for release 1.1.0.
-
 <details>
 <summary>LastFM Endpoint Info</summary>
 Currently, the tool uses the following LastFM json endpoints (courtesy of u/stdeem):
@@ -65,7 +63,7 @@ When the cron schedule re-runs, it deletes all of the downloaded tracks (and nev
          LIBRARY_TRACKS: "50"
       ```
    
-      3.2 ListenBrainz (Currently not implemented, planned for 1.1.0)
+      3.2 ListenBrainz
 
       The default track count for both playlists defaults to 25 with a max of 50.
       ```
