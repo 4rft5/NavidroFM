@@ -84,4 +84,4 @@ If you want to add something or clean up code, feel free to open a PR on this re
 I'm planning to add support for ListenBrainz auto-generated playlists, I just started using it however, so I don't have access to both their auto-generated playlists.
 
 ## Issues
-I have not encountered any issues during my testing, but if you encounter an issue, you can open an issue here. Please provide logs from everything to help me better help you.
+If you encounter an issue, you can open an issue here. Please provide logs from everything to help me better help you.
