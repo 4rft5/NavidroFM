@@ -1,9 +1,7 @@
 #!/bin/bash
 set -e
 
-
 umask 000
-
 
 PYTHON_PATH=$(which python3)
 
@@ -22,6 +20,13 @@ export MIX_SCHEDULE="${MIX_SCHEDULE}"
 export LIBRARY="${LIBRARY}"
 export LIBRARY_TRACKS="${LIBRARY_TRACKS}"
 export LIBRARY_SCHEDULE="${LIBRARY_SCHEDULE}"
+export LZ_USERNAME="${LZ_USERNAME}"
+export EXPLORATION="${EXPLORATION}"
+export EXPLORATION_TRACKS="${EXPLORATION_TRACKS}"
+export EXPLORATION_SCHEDULE="${EXPLORATION_SCHEDULE}"
+export JAMS="${JAMS}"
+export JAMS_TRACKS="${JAMS_TRACKS}"
+export JAMS_SCHEDULE="${JAMS_SCHEDULE}"
 export SYNC_SCHEDULE="${SYNC_SCHEDULE}"
 export TZ="${TZ}"
 export PATH="/usr/local/bin:/usr/local/sbin:/usr/bin:/usr/sbin:/bin:/sbin"
@@ -29,13 +34,20 @@ EOF
 
 chmod +x /app/cron-env.sh
 
-# Only set up cron if at least one playlist is enabled
+ANY_ENABLED=false
 if [ "${RECOMMENDED}" = "true" ] || [ "${MIX}" = "true" ] || [ "${LIBRARY}" = "true" ]; then
+    ANY_ENABLED=true
+fi
+if [ -n "${LZ_USERNAME}" ]; then
+    if [ "${EXPLORATION}" = "true" ] || [ "${JAMS}" = "true" ]; then
+        ANY_ENABLED=true
+    fi
+fi
 
+if [ "$ANY_ENABLED" = "true" ]; then
     if [ -n "${SYNC_SCHEDULE}" ]; then
         SCHEDULE="${SYNC_SCHEDULE}"
     else
-
         SCHEDULE="0 4 * * 1" 
         
         if [ "${RECOMMENDED}" = "true" ]; then
@@ -44,10 +56,13 @@ if [ "${RECOMMENDED}" = "true" ] || [ "${MIX}" = "true" ] || [ "${LIBRARY}" = "t
             SCHEDULE="${MIX_SCHEDULE:-0 4 * * 1}"
         elif [ "${LIBRARY}" = "true" ]; then
             SCHEDULE="${LIBRARY_SCHEDULE:-0 4 * * 1}"
+        elif [ "${EXPLORATION}" = "true" ]; then
+            SCHEDULE="${EXPLORATION_SCHEDULE:-0 4 * * 1}"
+        elif [ "${JAMS}" = "true" ]; then
+            SCHEDULE="${JAMS_SCHEDULE:-0 4 * * 1}"
         fi
     fi
     
-
     cat > /app/cron-wrapper.sh << 'WRAPPER_EOF'
 #!/bin/bash
 source /app/cron-env.sh
@@ -56,23 +71,28 @@ WRAPPER_EOF
     
     chmod +x /app/cron-wrapper.sh
     
-
+    # Set up cron job
     echo "${SCHEDULE} /app/cron-wrapper.sh" > /etc/cron.d/lastfm-sync
-    
-
     chmod 0644 /etc/cron.d/lastfm-sync
-    
-
     crontab /etc/cron.d/lastfm-sync
+    
     echo "NavidroFM starting."
     echo "Cron job configured successfully"
+    
+    echo ""
+    echo "Enabled playlists:"
+    [ "${RECOMMENDED}" = "true" ] && echo "  - LastFM Recommended"
+    [ "${MIX}" = "true" ] && echo "  - LastFM Mix"
+    [ "${LIBRARY}" = "true" ] && echo "  - LastFM Library"
+    [ "${EXPLORATION}" = "true" ] && [ -n "${LZ_USERNAME}" ] && echo "  - ListenBrainz Weekly Exploration"
+    [ "${JAMS}" = "true" ] && [ -n "${LZ_USERNAME}" ] && echo "  - ListenBrainz Weekly Jams"
+    echo ""
 else
     echo "No playlists enabled"
 fi
 
-
 if [ "${RUN_ON_STARTUP}" = "true" ]; then
-    if [ "${RECOMMENDED}" = "true" ] || [ "${MIX}" = "true" ] || [ "${LIBRARY}" = "true" ]; then
+    if [ "$ANY_ENABLED" = "true" ]; then
         echo ""
         echo "=========================================="
         echo "Running initial sync..."
@@ -85,22 +105,19 @@ if [ "${RUN_ON_STARTUP}" = "true" ]; then
         echo "=========================================="
     else
         echo ""
-        echo "No playlists enabled. Set RECOMMENDED, MIX, or LIBRARY to 'true' in docker-compose.yml"
+        echo "No playlists enabled. Configure LASTFM_USERNAME or LZ_USERNAME and enable playlists in docker-compose.yml"
         echo ""
     fi
 fi
 
-
 echo ""
-if [ "${RECOMMENDED}" = "true" ] || [ "${MIX}" = "true" ] || [ "${LIBRARY}" = "true" ]; then
+if [ "$ANY_ENABLED" = "true" ]; then
     echo "Starting cron daemon..."
     echo "Next sync scheduled for: ${SCHEDULE}"
     echo ""
     
-
     cron
     
-
     tail -f /var/log/cron.log
 else
     echo "No playlists enabled and no cron jobs configured."

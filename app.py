@@ -39,7 +39,7 @@ def log(message: str):
     """Print with immediate flush for real-time logging"""
     print(message, flush=True)
 
-class LastFMNavidromeSync:
+class NavidroFM:
     def __init__(self):
 
         tz_name = os.getenv('TZ', 'UTC')
@@ -99,27 +99,25 @@ class LastFMNavidromeSync:
             log(f"Failed to initialize YouTube Music API: {e}")
             raise
         
-        # Music directory (matches volume mount in docker-compose)
         self.music_dir = Path('/music/navidrofm')
         self.cookie_file = Path('/app/cookies/cookies.txt')
         
-        # Playlist configurations
         self.playlists = {
             'recommended': {
                 'enabled': os.getenv('RECOMMENDED', 'false').lower() == 'true',
-                'tracks': int(os.getenv('RECOMMENDED_TRACKS', '50')),
+                'tracks': int(os.getenv('RECOMMENDED_TRACKS', '25')),
                 'url': f'https://www.last.fm/player/station/user/{self.lastfm_user}/recommended',
                 'name': 'Discover Recommended',
                 'dir': self.music_dir / 'recommended',
-                'schedule': os.getenv('RECOMMENDED_SCHEDULE', '0 20 * * *')
+                'schedule': os.getenv('RECOMMENDED_SCHEDULE', '0 4 * * 1')
             },
             'mix': {
                 'enabled': os.getenv('MIX', 'false').lower() == 'true',
-                'tracks': int(os.getenv('MIX_TRACKS', '50')),
+                'tracks': int(os.getenv('MIX_TRACKS', '25')),
                 'url': f'https://www.last.fm/player/station/user/{self.lastfm_user}/mix',
                 'name': 'Recommended Mix',
                 'dir': self.music_dir / 'mix',
-                'schedule': os.getenv('MIX_SCHEDULE', '0 20 * * *')
+                'schedule': os.getenv('MIX_SCHEDULE', '0 4 * * 1')
             },
             'library': {
                 'enabled': os.getenv('LIBRARY', 'false').lower() == 'true',
@@ -127,9 +125,33 @@ class LastFMNavidromeSync:
                 'url': f'https://www.last.fm/player/station/user/{self.lastfm_user}/library',
                 'name': 'Library Mix',
                 'dir': None,
-                'schedule': os.getenv('LIBRARY_SCHEDULE', '0 20 * * *')
+                'schedule': os.getenv('LIBRARY_SCHEDULE', '0 4 * * 1')
             }
         }
+
+        self.listenbrainz_user = os.getenv('LZ_USERNAME')
+        
+        if self.listenbrainz_user:
+            self.listenbrainz_playlists = {
+                'exploration': {
+                    'enabled': os.getenv('EXPLORATION', 'false').lower() == 'true',
+                    'tracks': min(int(os.getenv('EXPLORATION_TRACKS', '25')), 50),
+                    'name': 'Weekly Exploration',
+                    'dir': self.music_dir / 'exploration',
+                    'schedule': os.getenv('EXPLORATION_SCHEDULE', '0 4 * * 1'),
+                    'playlist_type': 'weekly-exploration'
+                },
+                'jams': {
+                    'enabled': os.getenv('JAMS', 'false').lower() == 'true',
+                    'tracks': min(int(os.getenv('JAMS_TRACKS', '25')), 50),
+                    'name': 'Weekly Jams',
+                    'dir': self.music_dir / 'jams',
+                    'schedule': os.getenv('JAMS_SCHEDULE', '0 4 * * 1'),
+                    'playlist_type': 'weekly-jams'
+                }
+            }
+        else:
+            self.listenbrainz_playlists = {}
     
     def _make_request(self, endpoint: str, extra_params: Dict = None) -> Dict:
         """Make a request to the Subsonic API"""
@@ -141,6 +163,121 @@ class LastFMNavidromeSync:
         response = requests.get(url, params=params, timeout=30)
         response.raise_for_status()
         return response.json()
+    
+    def get_playlist_config(self, playlist_type: str) -> Optional[Dict]:
+        """Get configuration for any playlist type (LastFM or ListenBrainz)"""
+        if playlist_type in self.playlists:
+            return self.playlists[playlist_type]
+        elif playlist_type in self.listenbrainz_playlists:
+            return self.listenbrainz_playlists[playlist_type]
+        return None
+    
+    def fetch_listenbrainz_playlist_id(self, playlist_type: str) -> Optional[str]:
+        """Get the current week's ListenBrainz playlist ID"""
+        try:
+            if not self.listenbrainz_user:
+                log("ListenBrainz username not configured")
+                return None
+            
+            url = f"https://api.listenbrainz.org/1/user/{self.listenbrainz_user}/playlists/createdfor"
+            
+            response = requests.get(url, timeout=30)
+            response.raise_for_status()
+            data = response.json()
+            
+            playlists = data.get('playlists', [])
+            if not playlists:
+                log("No playlists found for user")
+                return None
+            
+            now = datetime.now()
+            
+            if playlist_type == 'daily-jams':
+                current_day = now.timetuple().tm_yday
+            else:
+                current_week = now.isocalendar()[1]
+            
+            for playlist_item in playlists:
+                playlist = playlist_item.get('playlist', {})
+                extension = playlist.get('extension', {}).get('https://musicbrainz.org/doc/jspf#playlist', {})
+                algorithm_metadata = extension.get('additional_metadata', {}).get('algorithm_metadata', {})
+                source_patch = algorithm_metadata.get('source_patch', '')
+                
+                if source_patch != playlist_type:
+                    continue
+                
+                date_str = playlist.get('date')
+                if date_str:
+                    try:
+                        playlist_date = datetime.fromisoformat(date_str.replace('Z', '+00:00'))
+                        
+                        if playlist_type == 'daily-jams':
+                            playlist_day = playlist_date.timetuple().tm_yday
+                            time_match = current_day == playlist_day
+                        else:
+                            playlist_week = playlist_date.isocalendar()[1]
+                            time_match = current_week == playlist_week
+                        
+                        if time_match:
+                            identifier = playlist.get('identifier', '')
+                            playlist_id = identifier.split('/')[-1]
+                            log(f"Found {playlist_type} playlist: {playlist_id}")
+                            return playlist_id
+                    except Exception as e:
+                        log(f"Error parsing date for playlist: {e}")
+                        continue
+            
+            log(f"No current {playlist_type} playlist found")
+            return None
+            
+        except Exception as e:
+            log(f"Error fetching ListenBrainz playlists: {e}")
+            return None
+
+    def fetch_listenbrainz_tracks(self, playlist_id: str, num_tracks: int) -> List[Dict]:
+        """Fetch tracks from a ListenBrainz playlist"""
+        try:
+            url = f"https://api.listenbrainz.org/1/playlist/{playlist_id}"
+            
+            response = requests.get(url, timeout=30)
+            response.raise_for_status()
+            data = response.json()
+            
+            playlist = data.get('playlist', {})
+            tracks = playlist.get('track', [])
+            
+            if not tracks:
+                log("No tracks found in playlist")
+                return []
+            
+            converted_tracks = []
+            for track in tracks:
+                title = track.get('title', '')
+                artist = track.get('creator', '')
+                album = track.get('album', '')
+                
+                if not title or not artist:
+                    continue
+                
+                extension = track.get('extension', {}).get('https://musicbrainz.org/doc/jspf#track', {})
+                additional_metadata = extension.get('additional_metadata', {})
+                artists_list = additional_metadata.get('artists', [])
+                
+                if len(artists_list) > 1:
+                    artist_names = [a.get('artist_credit_name', '') for a in artists_list if a.get('artist_credit_name')]
+                    if artist_names:
+                        artist = ', '.join(artist_names)
+                
+                converted_tracks.append({
+                    'name': title,
+                    'artists': [{'name': artist}],
+                    'album': album
+                })
+            return converted_tracks
+            
+        except Exception as e:
+            log(f"Error fetching ListenBrainz playlist tracks: {e}")
+            return []
         
     def fetch_lastfm_tracks(self, url: str, num_tracks: int) -> List[Dict]:
         """Fetch tracks from LastFM JSON endpoint with backup songs"""
@@ -198,6 +335,18 @@ class LastFMNavidromeSync:
         
         log(f"Collected {len(all_tracks)} tracks ({num_tracks} + backups)")
         return all_tracks
+    
+    def fetch_tracks_for_playlist(self, playlist_type: str, config: Dict) -> List[Dict]:
+        """Fetch tracks for any playlist type"""
+        if playlist_type in self.playlists:
+            return self.fetch_lastfm_tracks(config['url'], config['tracks'])
+        elif playlist_type in self.listenbrainz_playlists:
+            playlist_id = self.fetch_listenbrainz_playlist_id(config['playlist_type'])
+            if not playlist_id:
+                log("Could not find current week's playlist")
+                return []
+            return self.fetch_listenbrainz_tracks(playlist_id, config['tracks'])
+        return []
     
     def normalize_for_matching(self, text: str) -> str:
         """Normalize text for comparison"""
@@ -327,9 +476,12 @@ class LastFMNavidromeSync:
             log(f"  YouTube Music search error: {e}")
             return None
     
-    def download_track_ytmusic(self, video_id: str, output_dir: Path, metadata: Dict) -> bool:
+    def download_track_ytmusic(self, video_id: str, output_dir: Path, metadata: Dict, is_first_track: bool = False) -> bool:
         """Download track from YouTube Music"""
         try:
+            if is_first_track:
+                time.sleep(2)
+            
             artist = metadata.get('artist', 'Unknown')
             title = metadata.get('title', 'Unknown')
             safe_filename = self.sanitize_filename(f"{artist} - {title}")
@@ -345,11 +497,13 @@ class LastFMNavidromeSync:
                 '--no-embed-info-json',
                 '--output', str(output_dir / f'{safe_filename}.%(ext)s'),
                 '--format', 'bestaudio',
-                '--extractor-args', 'youtube:player_client=android_music',
+                '--extractor-args', 'youtube:player_client=default,mweb',
             ]
             
             if self.cookie_file.exists():
                 cmd.extend(['--cookies', str(self.cookie_file)])
+            else:
+                log(f"  Warning: Cookie file not found at {self.cookie_file}")
             
             cmd.append(url)
             
@@ -377,7 +531,7 @@ class LastFMNavidromeSync:
         except Exception as e:
             log(f"  Error: {e}")
             return False
-    
+
     def set_metadata(self, file_path: Path, metadata: Dict):
         """Set metadata and clean comments"""
         try:
@@ -390,7 +544,10 @@ class LastFMNavidromeSync:
             
             audio.tags.delall('COMM')
             
-            audio.tags['TPE1'] = TPE1(encoding=3, text=metadata.get('artist', ''))
+            artist_value = metadata.get('artist', '')
+            artist_value = artist_value.replace(', ', '; ').replace(' & ', '; ')
+            
+            audio.tags['TPE1'] = TPE1(encoding=3, text=artist_value)
             audio.tags['TIT2'] = TIT2(encoding=3, text=metadata.get('title', ''))
             audio.tags['TALB'] = TALB(encoding=3, text=metadata.get('album', ''))
             
@@ -423,7 +580,7 @@ class LastFMNavidromeSync:
             
         except Exception as e:
             log(f"  Warning: Could not set metadata: {e}")
-    
+
     def sanitize_filename(self, filename: str) -> str:
         """Sanitize filename"""
         invalid_chars = '<>:"/\\|?*'
@@ -443,6 +600,8 @@ class LastFMNavidromeSync:
                 playlists = [playlists]
             
             managed_names = [config['name'] for config in self.playlists.values()]
+            if self.listenbrainz_playlists:
+                managed_names.extend([config['name'] for config in self.listenbrainz_playlists.values()])
             
             for playlist in playlists:
                 if playlist['name'] in managed_names:
@@ -615,7 +774,6 @@ class LastFMNavidromeSync:
                     log(f"  [{i}/{len(downloaded_tracks)}] Search error for {artist} - {title}: {e}")
                     not_found_tracks.append(track_info)
             
-            # Retry logic for missing tracks
             if not_found_tracks:
                 retry_wait = min(len(not_found_tracks) * 2, 30)
                 log(f"\n{len(not_found_tracks)} tracks not found, waiting {retry_wait}s and retrying...")
@@ -681,18 +839,22 @@ class LastFMNavidromeSync:
             traceback.print_exc()
     
     def sync_playlist(self, playlist_type: str):
-        """Sync playlist with backup song support and duplicate checking"""
-        config = self.playlists[playlist_type]
+        """Unified sync function for both LastFM and ListenBrainz playlists"""
+        config = self.get_playlist_config(playlist_type)
         
+        if not config:
+            log(f"Unknown playlist type: {playlist_type}")
+            return
+            
         if not config['enabled']:
             log(f"Playlist {playlist_type} is disabled, skipping")
             return
-        
+
         log(f"\n{'='*60}")
         log(f"Syncing {config['name']}")
         log(f"{'='*60}")
         
-        tracks = self.fetch_lastfm_tracks(config['url'], config['tracks'])
+        tracks = self.fetch_tracks_for_playlist(playlist_type, config)
         
         if not tracks:
             log("No tracks found, aborting")
@@ -710,7 +872,7 @@ class LastFMNavidromeSync:
             success_count = 0
             target_count = config['tracks']
             track_index = 0
-            
+
             while success_count < target_count and track_index < len(tracks):
                 track = tracks[track_index]
                 track_index += 1
@@ -730,6 +892,7 @@ class LastFMNavidromeSync:
                     log(f"  Found in library")
                 else:
                     log(f"  Not found in library, trying next backup track")
+        
         else:
             playlist_dir = config['dir']
             
@@ -747,18 +910,22 @@ class LastFMNavidromeSync:
                 
                 if file_count > 0:
                     self.cleanup_missing_files()
+                    
+                    wait_time = min(max(file_count // 2, 5), 20)
+                    time.sleep(wait_time)
             else:
                 playlist_dir.mkdir(parents=True, exist_ok=True)
                 os.chmod(playlist_dir, 0o777)
                 log(f"Created directory: {playlist_dir}")
             
-            log(f"\nDownloading {config['tracks']} tracks (backup tracks: {len(tracks)})")
+            log(f"\nProcessing {config['tracks']} tracks (total available with backups: {len(tracks)})")
             success_count = 0
             target_count = config['tracks']
             track_index = 0
             downloaded_tracks = []
             skipped_count = 0
-            
+            time.sleep(2)
+
             while success_count < target_count and track_index < len(tracks):
                 track = tracks[track_index]
                 track_index += 1
@@ -769,7 +936,6 @@ class LastFMNavidromeSync:
                 
                 log(f"\n[{success_count+1}/{target_count}] Attempting: {artist} - {title}")
                 
-                # Check if track already exists in Navidrome
                 existing_song_id = self.search_navidrome_track(artist, title)
                 
                 if existing_song_id:
@@ -779,7 +945,6 @@ class LastFMNavidromeSync:
                     skipped_count += 1
                     continue
                 
-                # Track not found, proceed with YouTube Music search and download
                 ytmusic_info = self.search_ytmusic_track(artist, title)
                 
                 if ytmusic_info:                 
@@ -801,10 +966,8 @@ class LastFMNavidromeSync:
                 time.sleep(1)
             
             log(f"\nSuccessfully added {success_count}/{target_count} tracks")
-            log(f"  Downloaded: {success_count - skipped_count}")
-            log(f"  Skipped (already in library): {skipped_count}")
+            log(f"  Downloaded: {len(downloaded_tracks)}")
             
-            # Only scan for newly downloaded tracks
             if downloaded_tracks:
                 new_song_ids = self.scan_and_get_songs_from_directory(playlist_dir, downloaded_tracks)
                 song_ids.extend(new_song_ids)
@@ -814,12 +977,10 @@ class LastFMNavidromeSync:
         log(f"\n{'='*60}")
         log(f"Completed syncing {config['name']}")
         if playlist_type != 'library':
-            log(f"  Downloaded: {success_count - skipped_count if 'skipped_count' in locals() else success_count}")
-            if 'skipped_count' in locals():
-                log(f"  Skipped: {skipped_count}")
+            log(f"  Downloaded: {len(downloaded_tracks) if 'downloaded_tracks' in locals() else 'N/A'}")
         log(f"  In Navidrome: {len(song_ids)}")
         log(f"{'='*60}\n")
-    
+
     def get_next_cron_schedule(self) -> Optional[str]:
         """Get the schedule for the next enabled playlist"""
 
@@ -840,7 +1001,7 @@ class LastFMNavidromeSync:
 
 def main():
     if len(sys.argv) < 2:
-        log("Usage: app.py <recommended|mix|library|all>")
+        log("Usage: app.py <recommended|mix|library|exploration|jams|all>")
         sys.exit(1)
     
     playlist_type = sys.argv[1]
@@ -850,10 +1011,12 @@ def main():
         sys.exit(0)
     
     try:
-        syncer = LastFMNavidromeSync()
+        syncer = NavidroFM()
         
         if playlist_type == 'all':
             for ptype in ['recommended', 'mix', 'library']:
+                syncer.sync_playlist(ptype)
+            for ptype in ['exploration', 'jams']:
                 syncer.sync_playlist(ptype)
         else:
             syncer.sync_playlist(playlist_type)
