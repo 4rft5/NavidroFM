@@ -95,5 +95,11 @@ When the cron schedule re-runs, it deletes all of the downloaded tracks (and nev
 ## Contributions
 If you want to add something or clean up code, feel free to open a PR on this repo.
 
+Right now I am looking for assistance in:
+
+   * Switching to Alpine (Kept encountering weird yt-dlp errors)
+
+   * A better way to scan the library after a download is done.
+
 ## Issues
 If you encounter an issue, you can open an issue here. Please provide logs from everything to help me better help you.
