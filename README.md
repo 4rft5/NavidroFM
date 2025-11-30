@@ -97,7 +97,7 @@ If you want to add something or clean up code, feel free to open a PR on this re
 
 Right now I am looking for assistance in:
 
-   * Switching to Alpine (Kept encountering weird yt-dlp errors)
+   * Switching to Alpine to make the image smaller (Kept encountering weird yt-dlp errors)
 
    * A better way to scan the library after a download is done.
 
