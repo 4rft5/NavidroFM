@@ -703,8 +703,21 @@ class NavidroFM:
                 log("No new tracks downloaded, skipping scan")
                 return song_ids
             
-            log(f"Triggering Navidrome library scan for {len(downloaded_tracks)} new tracks...")
-            self._make_request('startScan', {'fullScan': 'false'})
+            try:
+                relative_path = directory.relative_to('/music')
+                library_id = os.getenv('NAVIDROME_LIBRARY_ID', '1')
+                target_path = f"{library_id}:{relative_path}"
+                
+                log(f"Triggering selective Navidrome scan for {len(downloaded_tracks)} new tracks...")
+                
+                self._make_request('startScan', {
+                    'fullScan': 'false',
+                    'target': target_path
+                })
+            except ValueError:
+                log(f"Warning: Could not determine relative path for {directory}, falling back to full scan")
+                log(f"Triggering Navidrome library scan for {len(downloaded_tracks)} new tracks...")
+                self._make_request('startScan', {'fullScan': 'false'})
             
             log("Waiting for scan to complete...")
             scan_time = 0
@@ -816,7 +829,7 @@ class NavidroFM:
             log(f"Error scanning and searching tracks: {e}")
             traceback.print_exc()
             return []
-
+    
     def update_playlist(self, playlist_id: str, song_ids: List[str]):
         """Update playlist with songs"""
         try:
