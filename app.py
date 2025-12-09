@@ -476,8 +476,8 @@ class NavidroFM:
             log(f"  YouTube Music search error: {e}")
             return None
     
-    def download_track_ytmusic(self, video_id: str, output_dir: Path, metadata: Dict, is_first_track: bool = False) -> bool:
-        """Download track from YouTube Music"""
+    def download_track_ytmusic(self, video_id: str, output_dir: Path, metadata: Dict, is_first_track: bool = False) -> Optional[Dict]:
+        """Download track from YouTube Music and return metadata with sanitized artist"""
         try:
             if is_first_track:
                 time.sleep(2)
@@ -517,20 +517,23 @@ class NavidroFM:
             if result.returncode == 0:
                 audio_file = output_dir / f"{safe_filename}.mp3"
                 if audio_file.exists():
-                    self.set_metadata(audio_file, metadata)
+                    sanitized_artist = self.set_metadata(audio_file, metadata)
                     os.chmod(audio_file, 0o666)
-                return True
+                    return {
+                        'artist': sanitized_artist,
+                        'title': metadata.get('title', '')
+                    }
             else:
                 error = result.stderr[:200] if result.stderr else 'Unknown error'
                 log(f"  Download failed: {error}")
-                return False
+                return None
                 
         except subprocess.TimeoutExpired:
             log(f"  Timeout")
-            return False
+            return None
         except Exception as e:
             log(f"  Error: {e}")
-            return False
+            return None
 
     def set_metadata(self, file_path: Path, metadata: Dict):
         """Set metadata and clean comments"""
@@ -545,7 +548,8 @@ class NavidroFM:
             audio.tags.delall('COMM')
             
             artist_value = metadata.get('artist', '')
-            artist_value = artist_value.replace(', ', '; ').replace(' & ', '; ')
+            import re
+            artist_value = re.sub(r',\s*&\s*|\s*&\s*|,\s*', '; ', artist_value)
             
             audio.tags['TPE1'] = TPE1(encoding=3, text=artist_value)
             audio.tags['TIT2'] = TIT2(encoding=3, text=metadata.get('title', ''))
@@ -578,8 +582,11 @@ class NavidroFM:
             if audio.tags and audio.tags.getall('COMM'):
                 log(f"  Warning: Comments still present after deletion")
             
+            return artist_value
+            
         except Exception as e:
             log(f"  Warning: Could not set metadata: {e}")
+            return metadata.get('artist', '')
 
     def sanitize_filename(self, filename: str) -> str:
         """Sanitize filename"""
@@ -970,7 +977,7 @@ class NavidroFM:
                     if downloaded:
                         log(f"  Downloaded successfully")
                         success_count += 1
-                        downloaded_tracks.append(ytmusic_info)
+                        downloaded_tracks.append(downloaded)
                     else:
                         log(f"  Download failed, trying next backup track")
                 else:
