@@ -11,7 +11,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 RUN pip install --no-cache-dir \
     requests \
-    yt-dlp[default] \
+    yt-dlp \
+    yt-dlp-ejs \
     ytmusicapi \
     mutagen \
     && rm -rf /root/.cache/pip
