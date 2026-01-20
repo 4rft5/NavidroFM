@@ -8,11 +8,12 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && apt-get clean \
     && rm -rf /var/cache/apt/archives/*
 
+RUN curl -fsSL https://deno.land/install.sh | sh && \
+    mv /root/.deno/bin/deno /usr/local/bin/deno
 
 RUN pip install --no-cache-dir \
     requests \
-    yt-dlp \
-    yt-dlp-ejs \
+    yt-dlp[default] \
     ytmusicapi \
     mutagen \
     && rm -rf /root/.cache/pip
