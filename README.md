@@ -97,9 +97,9 @@ If you want to add something or clean up code, feel free to open a PR on this re
 
 Right now I am looking for assistance in:
 
-   * Switching to Alpine to make the image smaller (Kept encountering weird yt-dlp errors)
+   * Switching to Alpine to make the image smaller (Kept encountering weird yt-dlp/cron errors)
 
-   * A better way to scan the library after a download is done.
+   * A reliable, faster way to scan the library after a download is done.
 
 ## Issues
 If you encounter an issue, you can open an issue here. Please provide logs from everything to help me better help you.
