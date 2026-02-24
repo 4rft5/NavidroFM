@@ -99,7 +99,7 @@ Right now I am looking for assistance in:
 
    * Making the image smaller (I'm not good at Docker optimization)
 
-   * A reliable, faster way to scan the library after a download is done.
+   * A reliable, faster way to scan the library after a download is done. I might skip scanning entirely and just use smart playlists. Let me know if you'd like to see this implemented.
 
 ## Issues
 If you encounter an issue, you can open an issue here. Please provide logs from everything to help me better help you.
