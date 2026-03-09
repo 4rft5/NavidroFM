@@ -498,6 +498,8 @@ class NavidroFM:
                 '--output', str(output_dir / f'{safe_filename}.%(ext)s'),
                 '--format', 'bestaudio',
                 '--extractor-args', 'youtube:player_client=default,mweb',
+                '--sleep-interval', '2',
+                '--no-update'
             ]
             
             if self.cookie_file.exists():
