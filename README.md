@@ -78,7 +78,6 @@ When the cron schedule re-runs, it deletes all of the downloaded tracks (and nev
    
    The path for `/your/music/library` can be set to the same path as Navidrome uses. The tool makes its own folder `navidrofm` in which it places its downloaded songs.
    
-   The volume for `cookies.txt` is optional but [(Cookies are highly recommended)](https://github.com/yt-dlp/yt-dlp/wiki/Extractors#exporting-youtube-cookies).
    ```
        volumes:
       - /your/music/library:/music
@@ -86,7 +85,11 @@ When the cron schedule re-runs, it deletes all of the downloaded tracks (and nev
       - ./blocklist.json:/app/blocklist.json:ro #Optional
    ```
 
-   5.1 Blocklist
+   4.1 Cookies
+
+      A cookie file [(is highly recommended)](https://github.com/yt-dlp/yt-dlp/wiki/Extractors#exporting-youtube-cookies). This lets yt-dlp download more reliably.
+
+   4.2 Blocklist
    
       If you don't want to download songs from a specific artist, you can add a blocklist.json file to skip them when downloading. See the `blocklist.json` file in files for an example. 
    
