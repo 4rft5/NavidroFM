@@ -92,19 +92,23 @@ class NavidroFM:
             log(f"Failed to connect to Navidrome: {e}")
             raise
         
-        try:
-            self.ytmusic = YTMusic()
-            log("YouTube Music API initialized")
-        except Exception as e:
-            log(f"Failed to initialize YouTube Music API: {e}")
-            raise
+        self.local_only = os.getenv('LOCAL_ONLY', 'false').lower() == 'true'
+
+        if self.local_only:
+            self.ytmusic = None
+            log("LOCAL_ONLY mode enabled: playlists will be built from local songs only")
+        else:
+            try:
+                self.ytmusic = YTMusic()
+                log("YouTube Music API initialized")
+            except Exception as e:
+                log(f"Failed to initialize YouTube Music API: {e}")
+                raise
         
         self.music_dir = Path('/music/navidrofm')
         self.cookie_file = Path('/app/cookies/cookies.txt')
 
-        # Load artist blocklist from /app/blocklist.json if present.
-        # Format: {"artists": ["Artist Name", "Another Artist"]}
-        # Matching is case-insensitive.
+        # Load artist blocklist from /app/blocklist.json.
         self.artist_blocklist: set = set()
         blocklist_path = Path('/app/blocklist.json')
         if blocklist_path.exists():
@@ -981,6 +985,7 @@ class NavidroFM:
                     log(f"  Skipping blocked artist: {artist}")
                     continue
 
+                log(f"\n[{success_count+1}/{target_count}] Attempting: {artist} - {title}")
 
                 song_id = self.search_navidrome_track(artist, title)
                 if song_id:
@@ -993,7 +998,9 @@ class NavidroFM:
         else:
             playlist_dir = config['dir']
             
-            if playlist_dir.exists():
+            if self.local_only:
+                log(f"LOCAL_ONLY skipping download directory setup")
+            elif playlist_dir.exists():
                 log(f"\nClearing old songs in {playlist_dir}")
                 file_count = 0
                 for file in playlist_dir.glob('*'):
@@ -1044,6 +1051,10 @@ class NavidroFM:
                     song_ids.append(existing_song_id)
                     success_count += 1
                     skipped_count += 1
+                    continue
+
+                if self.local_only:
+                    log(f"  Not found in library, trying next backup track")
                     continue
                 
                 ytmusic_info = self.search_ytmusic_track(artist, title)

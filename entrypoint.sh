@@ -28,6 +28,7 @@ export JAMS="${JAMS}"
 export JAMS_TRACKS="${JAMS_TRACKS}"
 export JAMS_SCHEDULE="${JAMS_SCHEDULE}"
 export SYNC_SCHEDULE="${SYNC_SCHEDULE}"
+export LOCAL_ONLY="${LOCAL_ONLY}"
 export TZ="${TZ}"
 export PATH="/usr/local/bin:/usr/local/sbin:/usr/bin:/usr/sbin:/bin:/sbin"
 EOF
