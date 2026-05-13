@@ -16,6 +16,9 @@ This tool uses public scrobble history to get information about your music taste
 
 Note: The LastFM Library playlist will never download any tracks, instead it simply queries the songs and searches Navidrome for them to add to the playlist.
 
+### Local Only
+If you want your playlists to only be made from local tracks, you can enable the `LOCAL_ONLY` env variable. It will only query Navidrome and not create/download any files.
+
 <details>
 <summary>LastFM Endpoint Info</summary>
 Currently, the tool uses the following LastFM json endpoints (courtesy of u/stdeem):
