@@ -22,6 +22,7 @@ services:
       JAMS: "true"
       JAMS_TRACKS: "25"
       RUN_ON_STARTUP: "false"
+      LOCAL_ONLY: "false"
       PUID: 1000
       PGID: 1000
     volumes:
