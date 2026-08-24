@@ -517,6 +517,7 @@ class NavidroFM:
                 '--output', str(output_dir / f'{safe_filename}.%(ext)s'),
                 '--format', 'bestaudio',
                 '--extractor-args', 'youtube:player_client=default,mweb',
+                '--extractor-args', 'youtubepot-bgutilhttp:base_url=http://127.0.0.1:4416',
                 '--sleep-interval', '2',
                 '--no-update'
             ]
@@ -617,13 +618,6 @@ class NavidroFM:
         return filename.strip()
 
     def _normalize_artist_separators(self, artist_string: str, target_separator: str, protected: str = None) -> str:
-        """Normalize various artist separators to the configured format.
-
-        When *protected* is given (the primary artist name from the API), it is
-        treated as an atomic token so that band names like "Invent, Animate" or
-        "Author & Punisher" survive normalization intact.  Any feat. artists
-        appended after the primary name are still normalized normally.
-        """
         if not artist_string:
             return artist_string
 

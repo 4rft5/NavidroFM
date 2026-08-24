@@ -5,6 +5,35 @@ umask 000
 
 PYTHON_PATH=$(which python3)
 
+start_pot_server() {
+    echo "Starting bgutil POT server..."
+    cd /app/bgutil/server/node_modules && \
+    deno run --quiet --allow-env --allow-net --allow-ffi=. --allow-read=. ../src/main.ts > /dev/null 2>&1 &
+    GREP_PID=$!
+    sleep 3
+    DENO_PID=$(grep -rl "^deno$" /proc/[0-9]*/comm 2>/dev/null | head -1 | cut -d/ -f3)
+}
+
+stop_pot_server() {
+    echo "Stopping bgutil POT server..."
+    [ -n "$GREP_PID" ] && kill $GREP_PID 2>/dev/null
+    [ -n "$DENO_PID" ] && kill $DENO_PID 2>/dev/null
+    unset DENO_PID GREP_PID
+}
+
+run_sync() {
+    start_pot_server
+    ${PYTHON_PATH} /app/app.py all 2>&1
+    stop_pot_server
+}
+
+# Called by cron
+if [ "$1" = "sync" ]; then
+    source /app/cron-env.sh
+    run_sync
+    exit 0
+fi
+
 cat > /app/cron-env.sh << EOF
 #!/bin/bash
 export LASTFM_USERNAME="${LASTFM_USERNAME}"
@@ -39,6 +68,7 @@ ANY_ENABLED=false
 if [ "${RECOMMENDED}" = "true" ] || [ "${MIX}" = "true" ] || [ "${LIBRARY}" = "true" ]; then
     ANY_ENABLED=true
 fi
+
 if [ -n "${LZ_USERNAME}" ]; then
     if [ "${EXPLORATION}" = "true" ] || [ "${JAMS}" = "true" ]; then
         ANY_ENABLED=true
@@ -49,8 +79,8 @@ if [ "$ANY_ENABLED" = "true" ]; then
     if [ -n "${SYNC_SCHEDULE}" ]; then
         SCHEDULE="${SYNC_SCHEDULE}"
     else
-        SCHEDULE="0 4 * * 1" 
-        
+        SCHEDULE="0 4 * * 1"
+
         if [ "${RECOMMENDED}" = "true" ]; then
             SCHEDULE="${RECOMMENDED_SCHEDULE:-0 4 * * 1}"
         elif [ "${MIX}" = "true" ]; then
@@ -63,23 +93,15 @@ if [ "$ANY_ENABLED" = "true" ]; then
             SCHEDULE="${JAMS_SCHEDULE:-0 4 * * 1}"
         fi
     fi
-    
-    cat > /app/cron-wrapper.sh << 'WRAPPER_EOF'
-#!/bin/bash
-source /app/cron-env.sh
-/usr/local/bin/python3 /app/app.py all >> /var/log/cron.log 2>&1
-WRAPPER_EOF
-    
-    chmod +x /app/cron-wrapper.sh
-    
+
     # Set up cron job
-    echo "${SCHEDULE} /app/cron-wrapper.sh" > /etc/cron.d/lastfm-sync
+    echo "${SCHEDULE} /app/entrypoint.sh sync >> /var/log/cron.log 2>&1" > /etc/cron.d/lastfm-sync
     chmod 0644 /etc/cron.d/lastfm-sync
     crontab /etc/cron.d/lastfm-sync
-    
+
     echo "NavidroFM starting."
     echo "Cron job configured successfully"
-    
+
     echo ""
     echo "Enabled playlists:"
     [ "${RECOMMENDED}" = "true" ] && echo "  - LastFM Recommended"
@@ -99,7 +121,9 @@ if [ "${RUN_ON_STARTUP}" = "true" ]; then
         echo "Running initial sync..."
         echo "=========================================="
         echo ""
-        ${PYTHON_PATH} /app/app.py all 2>&1
+
+        run_sync
+
         echo ""
         echo "=========================================="
         echo "Initial sync completed"
@@ -116,9 +140,10 @@ if [ "$ANY_ENABLED" = "true" ]; then
     echo "Starting cron daemon..."
     echo "Next sync scheduled for: ${SCHEDULE}"
     echo ""
-    
+
     cron
-    
+
+    touch /var/log/cron.log
     tail -f /var/log/cron.log
 else
     echo "No playlists enabled and no cron jobs configured."

@@ -8,12 +8,12 @@ RUN set -ex && \
         unzip \
         xz-utils \
         ca-certificates && \
-    curl -L https://johnvansickle.com/ffmpeg/releases/ffmpeg-release-amd64-static.tar.xz -o /tmp/ffmpeg.tar.xz && \
-    tar -xf /tmp/ffmpeg.tar.xz -C /tmp && \
-    mv /tmp/ffmpeg-*-amd64-static/ffmpeg /usr/local/bin/ && \
-    mv /tmp/ffmpeg-*-amd64-static/ffprobe /usr/local/bin/ && \
+    curl -L https://ffmpeg.martin-riedl.de/redirect/latest/linux/amd64/release/ffmpeg.zip -o /tmp/ffmpeg.zip && \
+    curl -L https://ffmpeg.martin-riedl.de/redirect/latest/linux/amd64/release/ffprobe.zip -o /tmp/ffprobe.zip && \
+    unzip -o /tmp/ffmpeg.zip -d /usr/local/bin/ && \
+    unzip -o /tmp/ffprobe.zip -d /usr/local/bin/ && \
     chmod +x /usr/local/bin/ffmpeg /usr/local/bin/ffprobe && \
-    rm -rf /tmp/ffmpeg* && \
+    rm -rf /tmp/ffmpeg* /tmp/ffprobe* && \
     curl -fsSL https://deno.land/install.sh | sh && \
     mv /root/.deno/bin/deno /usr/local/bin/deno && \
     chmod +x /usr/local/bin/deno && \
@@ -23,11 +23,22 @@ RUN set -ex && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/* /var/cache/apt/* /tmp/* /var/tmp/* /root/.cache
 
+RUN apt-get update && apt-get install -y --no-install-recommends git && \
+    git clone --single-branch --branch 1.3.1 \
+    https://github.com/Brainicism/bgutil-ytdlp-pot-provider.git /app/bgutil && \
+    cd /app/bgutil/server && \
+    deno install --allow-scripts=npm:canvas --frozen && \
+    apt-get remove -y git && \
+    apt-get autoremove -y && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/* /var/cache/apt/* /tmp/* /var/tmp/* /root/.cache
+
 RUN pip install --no-cache-dir \
     requests \
     yt-dlp[default] \
-    ytmusicapi \
-    mutagen && \
+    "ytmusicapi>=1.12.1" \
+    mutagen \
+    bgutil-ytdlp-pot-provider && \
     rm -rf /root/.cache/pip
 
 WORKDIR /app
