@@ -17,6 +17,13 @@ from zoneinfo import ZoneInfo
 
 LOCK_FILE = '/tmp/navidrofm.lock'
 
+NAVIDROFM_VERSION = '1.2.3'
+NAVIDROFM_CONTACT = 'https://github.com/4rft5/navidrofm'
+LISTENBRAINZ_USER_AGENT = f'navidrofm/{NAVIDROFM_VERSION} ( {NAVIDROFM_CONTACT} )'
+LB_MAX_RETRIES = 6
+LB_INITIAL_BACKOFF = 5
+LB_MAX_BACKOFF = 300
+
 def acquire_lock():
     """Try to acquire lock, return file descriptor or None"""
     try:
@@ -148,6 +155,9 @@ class NavidroFM:
             }
         }
 
+        self.lb_session = requests.Session()
+        self.lb_session.headers.update({'User-Agent': LISTENBRAINZ_USER_AGENT})
+
         self.listenbrainz_user = os.getenv('LZ_USERNAME')
         
         if self.listenbrainz_user:
@@ -191,6 +201,46 @@ class NavidroFM:
             return self.listenbrainz_playlists[playlist_type]
         return None
     
+    def _lb_get(self, url: str, timeout: int = 30) -> Optional[requests.Response]:
+        """
+        GET a ListenBrainz URL with the required User-Agent, retrying on 429
+        with an increasing backoff each time (honoring Retry-After / the
+        X-RateLimit-Reset-In header when the server provides one).
+        """
+        backoff = LB_INITIAL_BACKOFF
+
+        for attempt in range(1, LB_MAX_RETRIES + 1):
+            response = self.lb_session.get(url, timeout=timeout)
+
+            if response.status_code != 429:
+                response.raise_for_status()
+                return response
+
+            wait = None
+            retry_after = response.headers.get('Retry-After')
+            reset_in = response.headers.get('X-RateLimit-Reset-In')
+            for header_val in (retry_after, reset_in):
+                if header_val is not None:
+                    try:
+                        wait = float(header_val)
+                        break
+                    except ValueError:
+                        continue
+
+            if wait is None:
+                wait = backoff
+
+            wait = min(wait, LB_MAX_BACKOFF)
+
+            log(f"ListenBrainz rate limited (429) on attempt {attempt}/{LB_MAX_RETRIES}, "
+                f"waiting {wait:.0f}s before retrying...")
+            time.sleep(wait)
+
+            backoff = min(backoff * 2, LB_MAX_BACKOFF)
+
+        log(f"ListenBrainz still rate limiting after {LB_MAX_RETRIES} attempts, giving up for now")
+        return None
+
     def fetch_listenbrainz_playlist_id(self, playlist_type: str) -> Optional[str]:
         """Get the current week's ListenBrainz playlist ID"""
         try:
@@ -200,8 +250,9 @@ class NavidroFM:
             
             url = f"https://api.listenbrainz.org/1/user/{self.listenbrainz_user}/playlists/createdfor"
             
-            response = requests.get(url, timeout=30)
-            response.raise_for_status()
+            response = self._lb_get(url)
+            if response is None:
+                return None
             data = response.json()
             
             playlists = data.get('playlists', [])
@@ -258,8 +309,9 @@ class NavidroFM:
         try:
             url = f"https://api.listenbrainz.org/1/playlist/{playlist_id}"
             
-            response = requests.get(url, timeout=30)
-            response.raise_for_status()
+            response = self._lb_get(url)
+            if response is None:
+                return []
             data = response.json()
             
             playlist = data.get('playlist', {})

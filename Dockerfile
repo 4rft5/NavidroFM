@@ -24,7 +24,7 @@ RUN set -ex && \
     rm -rf /var/lib/apt/lists/* /var/cache/apt/* /tmp/* /var/tmp/* /root/.cache
 
 RUN apt-get update && apt-get install -y --no-install-recommends git && \
-    git clone --single-branch --branch 1.3.1 \
+    git clone --single-branch --branch master \
     https://github.com/Brainicism/bgutil-ytdlp-pot-provider.git /app/bgutil && \
     cd /app/bgutil/server && \
     deno install --allow-scripts=npm:canvas --frozen && \
