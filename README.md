@@ -103,7 +103,7 @@ When the cron schedule re-runs, it deletes all of the downloaded tracks (and nev
 
    4.1 Cookies
 
-      A cookie file [(is highly recommended)](https://github.com/yt-dlp/yt-dlp/wiki/Extractors#exporting-youtube-cookies). This lets yt-dlp download more reliably.
+      A cookie file [is highly recommended](https://github.com/yt-dlp/yt-dlp/wiki/Extractors#exporting-youtube-cookies). This lets yt-dlp download more reliably.
 
    4.2 Blocklist
    
