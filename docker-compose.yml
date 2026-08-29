@@ -21,7 +21,7 @@ services:
       EXPLORATION_TRACKS: "25"
       JAMS: "true"
       JAMS_TRACKS: "25"
-      TAGS: "rock,alternative"
+      TAGS: "genre1,genre2"
       TAGS_TRACKS: "25"
       RUN_ON_STARTUP: "false"
       PUID: 1000
