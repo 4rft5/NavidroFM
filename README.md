@@ -11,6 +11,7 @@ This tool uses public scrobble history to get information about your music taste
 | LastFM       | Discover Recommended | Recommendations of songs you may like.         |
 | LastFM       | Recommended Mix      | Mix of tracks to discover and tracks you know. |
 | LastFM       | Library Mix          | Mix of songs from your existing library.       |
+| LastFM       | This is {tag}        | A tag playlist made for each tag provided.     |
 | ListenBrainz | Weekly Exploration   | Discover new tracks based on your history.     |
 | ListenBrainz | Weekly Jams          | Mix of songs, both new and from your library.  |
 
@@ -21,13 +22,15 @@ If you want your playlists to only be made from local tracks, you can enable the
 
 <details>
 <summary>LastFM Endpoint Info</summary>
-Currently, the tool uses the following LastFM json endpoints (courtesy of u/stdeem):
+Currently, the tool uses the following LastFM json endpoints (First three courtesy of u/stdeem):
 
 Discover Recommended: https://www.last.fm/player/station/user/username/recommended
 
 Recommended Mix: https://www.last.fm/player/station/user/username/mix
 
 Library Mix: https://www.last.fm/player/station/user/username/library
+
+Tag Playlist: https://www.last.fm/player/station/tag/{tag}
 </details>
 
 ## How it Works
@@ -64,6 +67,16 @@ When the cron schedule re-runs, it deletes all of the downloaded tracks (and nev
          MIX_TRACKS: "25"
          LIBRARY: "true"
          LIBRARY_TRACKS: "50"
+      ```
+      3.1.1 LastFM Tag Playlists
+
+      The default track count for each Tag playlist is 25. Values for the `TAGS` variable are comma separated (see below for examples)
+
+      Tags can be things like genres (Rock,Alternative) or even things like artists (Interpol,Massive Attack) or a mix of both. You can verify a tag playlist exists by visiting `https://www.last.fm/player/station/tag/{tag}` where {tag} is the intended subject. If it returns valid JSON, it will work.
+      ```
+      TAGS: "genre1,genre2"
+      TAGS: "" #Optional, if you don't want tag playlists
+      TAGS_TRACKS: "25"
       ```
    
       3.2 ListenBrainz
