@@ -56,6 +56,8 @@ export EXPLORATION_SCHEDULE="${EXPLORATION_SCHEDULE}"
 export JAMS="${JAMS}"
 export JAMS_TRACKS="${JAMS_TRACKS}"
 export JAMS_SCHEDULE="${JAMS_SCHEDULE}"
+export TAGS="${TAGS}"
+export TAGS_TRACKS="${TAGS_TRACKS}"
 export SYNC_SCHEDULE="${SYNC_SCHEDULE}"
 export LOCAL_ONLY="${LOCAL_ONLY}"
 export TZ="${TZ}"
@@ -66,6 +68,10 @@ chmod +x /app/cron-env.sh
 
 ANY_ENABLED=false
 if [ "${RECOMMENDED}" = "true" ] || [ "${MIX}" = "true" ] || [ "${LIBRARY}" = "true" ]; then
+    ANY_ENABLED=true
+fi
+
+if [ -n "${TAGS}" ]; then
     ANY_ENABLED=true
 fi
 
@@ -87,6 +93,8 @@ if [ "$ANY_ENABLED" = "true" ]; then
             SCHEDULE="${MIX_SCHEDULE:-0 4 * * 1}"
         elif [ "${LIBRARY}" = "true" ]; then
             SCHEDULE="${LIBRARY_SCHEDULE:-0 4 * * 1}"
+        elif [ -n "${TAGS}" ]; then
+            SCHEDULE="0 4 * * 1"
         elif [ "${EXPLORATION}" = "true" ]; then
             SCHEDULE="${EXPLORATION_SCHEDULE:-0 4 * * 1}"
         elif [ "${JAMS}" = "true" ]; then
@@ -107,6 +115,13 @@ if [ "$ANY_ENABLED" = "true" ]; then
     [ "${RECOMMENDED}" = "true" ] && echo "  - LastFM Recommended"
     [ "${MIX}" = "true" ] && echo "  - LastFM Mix"
     [ "${LIBRARY}" = "true" ] && echo "  - LastFM Library"
+    if [ -n "${TAGS}" ]; then
+        IFS=',' read -ra TAG_ARRAY <<< "${TAGS}"
+        for TAG in "${TAG_ARRAY[@]}"; do
+            TAG_TRIMMED=$(echo "${TAG}" | xargs)
+            [ -n "${TAG_TRIMMED}" ] && echo "  - LastFM Tag: ${TAG_TRIMMED}"
+        done
+    fi
     [ "${EXPLORATION}" = "true" ] && [ -n "${LZ_USERNAME}" ] && echo "  - ListenBrainz Weekly Exploration"
     [ "${JAMS}" = "true" ] && [ -n "${LZ_USERNAME}" ] && echo "  - ListenBrainz Weekly Jams"
     echo ""

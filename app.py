@@ -155,6 +155,36 @@ class NavidroFM:
             }
         }
 
+        tags_env = os.getenv('TAGS', '')
+        tags_tracks = int(os.getenv('TAGS_TRACKS', '25'))
+
+        self.tag_playlist_keys: List[str] = []
+
+        for raw_tag in tags_env.split(','):
+            tag = raw_tag.strip().lower()
+            if not tag:
+                continue
+
+            slug = re.sub(r'[^a-z0-9]+', '_', tag).strip('_')
+            if not slug:
+                continue
+
+            key = f'tag_{slug}'
+            display_name = tag.replace('-', ' ').replace('_', ' ').title()
+
+            self.playlists[key] = {
+                'enabled': True,
+                'tracks': tags_tracks,
+                'url': f'https://www.last.fm/player/station/tag/{tag}',
+                'name': f'This is {display_name}',
+                'dir': self.music_dir / key,
+                'schedule': '0 4 * * 1'
+            }
+            self.tag_playlist_keys.append(key)
+
+        if self.tag_playlist_keys:
+            log(f"Configured {len(self.tag_playlist_keys)} tag playlist(s): {', '.join(self.tag_playlist_keys)}")
+
         self.lb_session = requests.Session()
         self.lb_session.headers.update({'User-Agent': LISTENBRAINZ_USER_AGENT})
 
@@ -564,7 +594,6 @@ class NavidroFM:
                 '-x',
                 '--audio-format', 'mp3',
                 '--audio-quality', '0',
-                '--embed-thumbnail',
                 '--no-embed-info-json',
                 '--output', str(output_dir / f'{safe_filename}.%(ext)s'),
                 '--format', 'bestaudio',
@@ -639,6 +668,7 @@ class NavidroFM:
                 try:
                     response = requests.get(cover_url, timeout=10)
                     if response.status_code == 200:
+                        audio.tags.delall('APIC')
                         audio.tags['APIC'] = APIC(
                             encoding=3,
                             mime='image/jpeg',
@@ -1147,7 +1177,7 @@ class NavidroFM:
             return sync_schedule
         
         # Fallback in case of weird failure
-        for playlist_type in ['recommended', 'mix', 'library']:
+        for playlist_type in ['recommended', 'mix', 'library'] + self.tag_playlist_keys:
             config = self.playlists[playlist_type]
             if config['enabled']:
                 return config['schedule']
@@ -1159,7 +1189,7 @@ class NavidroFM:
 
 def main():
     if len(sys.argv) < 2:
-        log("Usage: app.py <recommended|mix|library|exploration|jams|all>")
+        log("Usage: app.py <recommended|mix|library|tag_<name>|exploration|jams|all>")
         sys.exit(1)
     
     playlist_type = sys.argv[1]
@@ -1172,7 +1202,7 @@ def main():
         syncer = NavidroFM()
         
         if playlist_type == 'all':
-            for ptype in ['recommended', 'mix', 'library']:
+            for ptype in ['recommended', 'mix', 'library'] + syncer.tag_playlist_keys:
                 syncer.sync_playlist(ptype)
             for ptype in ['exploration', 'jams']:
                 syncer.sync_playlist(ptype)
