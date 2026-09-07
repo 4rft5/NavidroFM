@@ -21,11 +21,11 @@ services:
       EXPLORATION_TRACKS: "25"
       JAMS: "true"
       JAMS_TRACKS: "25"
-      TAGS: "rock,alternative"
+      TAGS: "tag1,tag2"
       TAGS_TRACKS: "25"
       RUN_ON_STARTUP: "false"
       PUID: 1000
       PGID: 1000
     volumes:
       - /your/music/library:/music
-      - ./cookies.txt:/app/cookies/cookies.txt
+      - ./cookies.txt:/app/cookies/cookies.txt:ro
