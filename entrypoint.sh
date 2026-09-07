@@ -1,6 +1,8 @@
 #!/bin/bash
 set -e
 
+export PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+
 umask 000
 
 PYTHON_PATH=$(which python3)
@@ -102,10 +104,7 @@ if [ "$ANY_ENABLED" = "true" ]; then
         fi
     fi
 
-    # Set up cron job
-    echo "${SCHEDULE} /app/entrypoint.sh sync >> /var/log/cron.log 2>&1" > /etc/cron.d/lastfm-sync
-    chmod 0644 /etc/cron.d/lastfm-sync
-    crontab /etc/cron.d/lastfm-sync
+    echo "${SCHEDULE} /app/entrypoint.sh sync >> /var/log/cron.log 2>&1" | crontab -
 
     echo "NavidroFM starting."
     echo "Cron job configured successfully"
@@ -156,10 +155,10 @@ if [ "$ANY_ENABLED" = "true" ]; then
     echo "Next sync scheduled for: ${SCHEDULE}"
     echo ""
 
-    cron
-
     touch /var/log/cron.log
-    tail -f /var/log/cron.log
+    tail -f /var/log/cron.log &
+
+    exec cron -f
 else
     echo "No playlists enabled and no cron jobs configured."
     echo "Container will exit. Enable at least one playlist in docker-compose.yml"
