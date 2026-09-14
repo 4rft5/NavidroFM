@@ -17,7 +17,7 @@ from zoneinfo import ZoneInfo
 
 LOCK_FILE = '/tmp/navidrofm.lock'
 
-NAVIDROFM_VERSION = '1.2.3'
+NAVIDROFM_VERSION = '1.3.2'
 NAVIDROFM_CONTACT = 'https://github.com/4rft5/navidrofm'
 LISTENBRAINZ_USER_AGENT = f'navidrofm/{NAVIDROFM_VERSION} ( {NAVIDROFM_CONTACT} )'
 LB_MAX_RETRIES = 6
@@ -45,6 +45,12 @@ def release_lock(lock_fd):
 def log(message: str):
     """Print with immediate flush for real-time logging"""
     print(message, flush=True)
+
+def get_int_env(name: str, default: str) -> int:
+    value = os.getenv(name)
+    if value is None or value.strip() == '':
+        value = default
+    return int(value)
 
 class NavidroFM:
     def __init__(self):
@@ -77,7 +83,7 @@ class NavidroFM:
             't': token,
             's': salt,
             'v': '1.16.1',
-            'c': 'lastfm-sync',
+            'c': 'navidrofm',
             'f': 'json'
         }
         
@@ -131,7 +137,7 @@ class NavidroFM:
         self.playlists = {
             'recommended': {
                 'enabled': os.getenv('RECOMMENDED', 'false').lower() == 'true',
-                'tracks': int(os.getenv('RECOMMENDED_TRACKS', '25')),
+                'tracks': get_int_env('RECOMMENDED_TRACKS', '25'),
                 'url': f'https://www.last.fm/player/station/user/{self.lastfm_user}/recommended',
                 'name': 'Discover Recommended',
                 'dir': self.music_dir / 'recommended',
@@ -139,7 +145,7 @@ class NavidroFM:
             },
             'mix': {
                 'enabled': os.getenv('MIX', 'false').lower() == 'true',
-                'tracks': int(os.getenv('MIX_TRACKS', '25')),
+                'tracks': get_int_env('MIX_TRACKS', '25'),
                 'url': f'https://www.last.fm/player/station/user/{self.lastfm_user}/mix',
                 'name': 'Recommended Mix',
                 'dir': self.music_dir / 'mix',
@@ -147,7 +153,7 @@ class NavidroFM:
             },
             'library': {
                 'enabled': os.getenv('LIBRARY', 'false').lower() == 'true',
-                'tracks': int(os.getenv('LIBRARY_TRACKS', '50')),
+                'tracks': get_int_env('LIBRARY_TRACKS', '50'),
                 'url': f'https://www.last.fm/player/station/user/{self.lastfm_user}/library',
                 'name': 'Library Mix',
                 'dir': None,
@@ -156,7 +162,7 @@ class NavidroFM:
         }
 
         tags_env = os.getenv('TAGS', '')
-        tags_tracks = int(os.getenv('TAGS_TRACKS', '25'))
+        tags_tracks = get_int_env('TAGS_TRACKS', '25')
 
         self.tag_playlist_keys: List[str] = []
 
@@ -194,7 +200,7 @@ class NavidroFM:
             self.listenbrainz_playlists = {
                 'exploration': {
                     'enabled': os.getenv('EXPLORATION', 'false').lower() == 'true',
-                    'tracks': min(int(os.getenv('EXPLORATION_TRACKS', '25')), 50),
+                    'tracks': min(get_int_env('EXPLORATION_TRACKS', '25'), 50),
                     'name': 'Weekly Exploration',
                     'dir': self.music_dir / 'exploration',
                     'schedule': os.getenv('EXPLORATION_SCHEDULE', '0 4 * * 1'),
@@ -202,7 +208,7 @@ class NavidroFM:
                 },
                 'jams': {
                     'enabled': os.getenv('JAMS', 'false').lower() == 'true',
-                    'tracks': min(int(os.getenv('JAMS_TRACKS', '25')), 50),
+                    'tracks': min(get_int_env('JAMS_TRACKS', '25'), 50),
                     'name': 'Weekly Jams',
                     'dir': self.music_dir / 'jams',
                     'schedule': os.getenv('JAMS_SCHEDULE', '0 4 * * 1'),
