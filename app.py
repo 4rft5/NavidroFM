@@ -386,6 +386,41 @@ class NavidroFM:
             log(f"Error fetching ListenBrainz playlist tracks: {e}")
             return []
         
+    LASTFM_HEADERS = {
+        'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 '
+                      '(KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
+        'Accept': 'application/json, text/javascript, */*; q=0.01',
+        'Accept-Language': 'en-US,en;q=0.9',
+        'X-Requested-With': 'XMLHttpRequest',
+        'Referer': 'https://www.last.fm/',
+    }
+
+    def _get_lastfm_json(self, url: str, retries: int = 4) -> Optional[Dict]:
+        """GET a LastFM station URL, retrying on 5xx / empty / non-JSON responses"""
+        session = requests.Session()
+        session.headers.update(self.LASTFM_HEADERS)
+
+        for attempt in range(1, retries + 1):
+            try:
+                response = session.get(url, timeout=30)
+                body = response.text.strip()
+
+                if response.status_code == 200 and body:
+                    try:
+                        return response.json()
+                    except ValueError:
+                        pass  # fall through to the diagnostic log
+
+                log(f"  LastFM attempt {attempt}/{retries}: status={response.status_code}, "
+                    f"content-type={response.headers.get('Content-Type')}, "
+                    f"len={len(body)}, body[:150]={body[:150]!r}")
+            except requests.exceptions.RequestException as e:
+                log(f"  LastFM attempt {attempt}/{retries}: request error: {e}")
+
+            time.sleep(2 * attempt)  # simple backoff
+
+        return None
+
     def fetch_lastfm_tracks(self, url: str, num_tracks: int) -> List[Dict]:
         """Fetch tracks from LastFM JSON endpoint with backup songs"""
         backup_multiplier = 3
@@ -403,9 +438,9 @@ class NavidroFM:
             log(f"  Query {attempts}: Fetching more tracks...")
             
             try:
-                response = requests.get(url, timeout=30)
-                response.raise_for_status()
-                data = response.json()
+                data = self._get_lastfm_json(url)
+                if data is None:
+                    break
                 
                 tracks = data.get('playlist', [])
                 if not tracks:
